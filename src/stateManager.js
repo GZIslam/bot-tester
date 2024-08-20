@@ -2,6 +2,7 @@ const { generateStartQuestion, mainButtons, nameMap, createTestStep, createTests
 
 const stateManager = (bot) => {
     const chats = {};
+    const tests = [];
     const onCallbackQuery = async (msg) => {
         // console.log(msg)
         const data = msg.data;
@@ -9,11 +10,11 @@ const stateManager = (bot) => {
         const route = data.split("_");
         if(!chats[chatId]) return
         if(route[0] === "test") {
-            if(!chats[chatId].tests) {
+            if(tests.length < 1) {
                 await bot.sendMessage(chatId, "Ошибка");
             } else {
-                await bot.sendMessage(chatId, `Вы выбрали - ${chats[chatId].tests[Number(route[1])].name}`, {parse_mode : "HTML", ...testSelectedButtons});
-                chats[chatId].currentTest = chats[chatId].tests[Number(route[1])];
+                await bot.sendMessage(chatId, `Вы выбрали - ${tests[Number(route[1])].name}`, {parse_mode : "HTML", ...testSelectedButtons});
+                chats[chatId].currentTest = tests[Number(route[1])];
             }
         }
     }
@@ -33,7 +34,7 @@ const stateManager = (bot) => {
                 }
                 if(user.answer == text) {
                     await bot.sendMessage(chatId, "Правильно!\nВы вошли.", {parse_mode : "HTML", ...mainButtons});
-                    chats[chatId] = {authorized: true, status: "home"};
+                    chats[chatId] = {authorized: true, status: "home", name: msg.from.username};
                 }
             } else {
                 switch (text) {
@@ -43,17 +44,17 @@ const stateManager = (bot) => {
                         user.step = "name";
                         break;
                     case nameMap.list:
-                        if(!user.tests) {
+                        if(tests.length < 1) {
                             await bot.sendMessage(chatId, "У вас пока нету тестов", {parse_mode : "HTML", ...mainButtons});
                         } else {
-                            await bot.sendMessage(chatId, "Список всех ваших тестов:\n" + user.tests.map((t, index) => `${index + 1}. ${t.name}`).join("\n"), {parse_mode : "HTML", ...mainButtons});
+                            await bot.sendMessage(chatId, "Список всех ваших тестов:\n" + tests.map((t, index) => `${index + 1}. ${t.name}`).join("\n"), {parse_mode : "HTML", ...mainButtons});
                         }
                         break;
                     case nameMap.start:
-                        if(!user.tests) {
+                        if(tests.length < 1) {
                             await bot.sendMessage(chatId, "У вас пока нету тестов", {parse_mode : "HTML", ...mainButtons});
                         } else {
-                            await bot.sendMessage(chatId, "Выберите тест:", {parse_mode : "HTML", ...createTestsListButtons(user.tests)});
+                            await bot.sendMessage(chatId, "Выберите тест:", {parse_mode : "HTML", ...createTestsListButtons(tests)});
                         }
                         break;
                     case nameMap.dev:
@@ -62,12 +63,16 @@ const stateManager = (bot) => {
                         chats[chatId] = {question, buttons, answer, ...chats[chatId], status: "dev"};
                         break;
                     case nameMap.back:
-                        // if(!!chats[chatId].score) {
-                        //     await bot.sendMessage(chatId, "ОЧКИ: " + chats[chatId].score);
-                        // }
                         await bot.sendMessage(chatId, "Главное меню.", {parse_mode : "HTML", ...mainButtons});
                         delete chats[chatId].score
                         chats[chatId].status = "home";
+                        break;
+                    case nameMap.results:
+                        if(tests.length < 1) {
+                            await bot.sendMessage(chatId, "Еще никто не решел тесты", {parse_mode : "HTML", ...mainButtons});
+                        } else {
+                            await bot.sendMessage(chatId, "Результаты:\n" + tests.map(t => `${t.name}:\n` + t.results.map(r => `${chats[r.chatId].name} - ${r.score}`).join("\n")), {parse_mode : "HTML", ...mainButtons});
+                        }
                         break;
                     case nameMap.startTest:
                         chats[chatId].currentIndex = 0;
@@ -117,11 +122,7 @@ const stateManager = (bot) => {
                                             await bot.sendMessage(chatId, `Напишите вопрос:`)//, {parse_mode : "HTML", ...backButton});
                                         } else if (text === nameMap.finish) {
                                             user.test.questions.push(user.test.current);
-                                            if(user.tests){
-                                                user.tests.push({name: user.test.name, questions: user.test.questions});
-                                            } else {
-                                                user.tests = [{name: user.test.name, questions: user.test.questions}];
-                                            }
+                                            tests.push({name: user.test.name, questions: user.test.questions});
                                             await bot.sendMessage(chatId, `Тест ${user.test.name} добавлен в список`, {parse_mode : "HTML", ...mainButtons});
                                             user.status = "home";
                                         }
@@ -162,7 +163,12 @@ const stateManager = (bot) => {
                                         chats[chatId].currentTest.res = data;
                                     } else {
                                         await bot.sendMessage(chatId, "Правильно!\nТест завершен!\nОЧКИ: " + chats[chatId].score, {parse_mode : "HTML", ...mainButtons});
-                                        chats[chatId].status = "home";   
+                                        chats[chatId].status = "home";
+                                        if(chats[chatId].currentTest.results) {
+                                            chats[chatId].currentTest.results.push({chatId, score: chats[chatId].score});
+                                        } else {
+                                            chats[chatId].currentTest.results = [{chatId, score: chats[chatId].score}];
+                                        }
                                     }
                                 } else {
                                     if(chats[chatId].score !== undefined) {

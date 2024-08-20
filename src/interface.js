@@ -78,6 +78,7 @@ const nameMap = {
     "add": "Добавить",
     "finish": "Завершить и сохранить",
     "startTest": "Начать Тест",
+    "results": "Результаты"
 }
 
 const generateQuestion = (data) => {
@@ -134,7 +135,8 @@ const mainButtons = {
     reply_markup: JSON.stringify({
         keyboard: [
             [{text: nameMap.create},{text: nameMap.list}],
-            [{text: nameMap.start},{text: nameMap.dev}]
+            [{text: nameMap.start},{text: nameMap.dev}],
+            [{text: nameMap.results}],
         ]
     })
 }
