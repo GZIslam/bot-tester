@@ -78,7 +78,8 @@ const nameMap = {
     "add": "Добавить",
     "finish": "Завершить и сохранить",
     "startTest": "Начать Тест",
-    "results": "Результаты"
+    "results": "Результаты",
+    "getTestsData": "!gt",
 }
 
 const generateQuestion = (data) => {

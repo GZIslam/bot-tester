@@ -69,9 +69,16 @@ const stateManager = (bot) => {
                         break;
                     case nameMap.results:
                         if(tests.length < 1) {
-                            await bot.sendMessage(chatId, "Еще никто не решел тесты", {parse_mode : "HTML", ...mainButtons});
+                            await bot.sendMessage(chatId, "Еще никто не решал тесты", {parse_mode : "HTML", ...mainButtons});
                         } else {
-                            await bot.sendMessage(chatId, "Результаты:\n" + tests.map(t => `${t.name}:\n` + t.results.map(r => `${chats[r.chatId].name} - ${r.score}`).join("\n")), {parse_mode : "HTML", ...mainButtons});
+                            await bot.sendMessage(chatId, "Результаты:\n" + tests.map(t => `\n${t.name}:\n` + (t.results ? t.results.map(r => `${chats[r.chatId].name} - ${r.score}`).join("\n") : "Никто не решал")), {parse_mode : "HTML", ...mainButtons});
+                        }
+                        break;
+                    case nameMap.getTestsData:
+                        if(tests.length < 1) {
+                            await bot.sendMessage(chatId, "Еще нету тестов", {parse_mode : "HTML", ...mainButtons});
+                        } else {
+                            await bot.sendMessage(chatId, "ТЕСТЫ\n" + JSON.stringify(tests.map(({name, questions}) => ({name, questions}))), {parse_mode : "HTML", ...mainButtons});
                         }
                         break;
                     case nameMap.startTest:
