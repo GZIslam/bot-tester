@@ -1,8 +1,9 @@
 const { generateStartQuestion, mainButtons, nameMap, createTestStep, createTestsListButtons, testSelectedButtons, generateQuestion, backButton, createTest } = require("./interface");
+const { victorina } = require("./mock");
 
 const stateManager = (bot) => {
     const chats = {};
-    const tests = [];
+    const tests = [victorina];
     const onCallbackQuery = async (msg) => {
         // console.log(msg)
         const data = msg.data;
@@ -169,13 +170,13 @@ const stateManager = (bot) => {
                                         await bot.sendMessage(chatId, "Правильно\nОЧКИ: " + chats[chatId].score + "\n" + data.question, {parse_mode : "HTML", ...data.buttons});
                                         chats[chatId].currentTest.res = data;
                                     } else {
-                                        await bot.sendMessage(chatId, "Правильно!\nТест завершен!\nОЧКИ: " + chats[chatId].score, {parse_mode : "HTML", ...mainButtons});
-                                        chats[chatId].status = "home";
-                                        if(chats[chatId].currentTest.results) {
+                                        await bot.sendMessage(chatId, "Правильно!\nТест завершен!\nОЧКИ: " + chats[chatId].score, {parse_mode : "HTML", ...mainButtons});                                        if(chats[chatId].currentTest.results) {
                                             chats[chatId].currentTest.results.push({chatId, score: chats[chatId].score});
                                         } else {
                                             chats[chatId].currentTest.results = [{chatId, score: chats[chatId].score}];
                                         }
+                                        chats[chatId].status = "home";
+                                        delete chats[chatId].score;
                                     }
                                 } else {
                                     if(chats[chatId].score !== undefined) {
